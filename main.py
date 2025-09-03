@@ -7,7 +7,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # ============================
 # CONFIG
 # ============================
-API_KEY = "YOUR_TMDB_API_KEY"  # Replace with your TMDB API key
+API_KEY = "16bc7af36c595883827324446a8c4365"  # Replace with your TMDB API key
 BASE_URL = "https://api.themoviedb.org/3"
 
 # ============================
@@ -150,3 +150,4 @@ else:
                     st.markdown(f"<div class='movie-year'>{row.release_date if row.release_date else 'Unknown Year'}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='overview'>{row.overview[:150]}...</div>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
+

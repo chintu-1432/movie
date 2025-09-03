@@ -7,7 +7,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # ============================
 # CONFIG
 # ============================
-API_KEY = "16bc7af36c595883827324446a8c4365"  # Replace with your TMDB API key
+API_KEY = "YOUR_TMDB_API_KEY"  # Replace with your TMDB API key
 BASE_URL = "https://api.themoviedb.org/3"
 
 # ============================
@@ -61,7 +61,7 @@ def build_recommendations(df, movie_title, top_n=6):
 # ============================
 st.set_page_config(page_title="Movie Recommender", layout="wide")
 
-# Custom CSS for frontend styling
+# Custom CSS for frontend styling + animations
 st.markdown("""
     <style>
         .movie-card {
@@ -69,9 +69,15 @@ st.markdown("""
             color: white;
             padding: 15px;
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             margin-bottom: 20px;
             text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeIn 1s ease;
+        }
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 18px rgba(255,75,75,0.6);
         }
         .movie-title {
             font-size: 18px;
@@ -86,6 +92,22 @@ st.markdown("""
             font-size: 13px;
             margin-top: 10px;
             color: #ddd;
+        }
+        .stButton>button {
+            background: linear-gradient(90deg, #FF4B4B, #FF8C00);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        .stButton>button:hover {
+            background: linear-gradient(90deg, #FF8C00, #FF4B4B);
+            transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(15px);}
+            to {opacity: 1; transform: translateY(0);}
         }
     </style>
 """, unsafe_allow_html=True)
@@ -123,7 +145,7 @@ else:
                     poster_url = f"https://image.tmdb.org/t/p/w300{row.poster_path}" if row.poster_path else ""
                     st.markdown("<div class='movie-card'>", unsafe_allow_html=True)
                     if poster_url:
-                        st.image(poster_url, width=180)
+                        st.image(poster_url, width=180, caption="")
                     st.markdown(f"<div class='movie-title'>{row.title}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='movie-year'>{row.release_date if row.release_date else 'Unknown Year'}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='overview'>{row.overview[:150]}...</div>", unsafe_allow_html=True)

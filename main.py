@@ -142,12 +142,13 @@ else:
             cols = st.columns(3)
             for i, row in enumerate(recommendations.itertuples(), 1):
                 with cols[(i-1) % 3]:
+                    movie_url = f"https://www.themoviedb.org/movie/{row.id}"
                     poster_url = f"https://image.tmdb.org/t/p/w300{row.poster_path}" if row.poster_path else ""
+                    st.markdown(f"<a href='{movie_url}' target='_blank'>", unsafe_allow_html=True)
                     st.markdown("<div class='movie-card'>", unsafe_allow_html=True)
                     if poster_url:
                         st.image(poster_url, width=180, caption="")
                     st.markdown(f"<div class='movie-title'>{row.title}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='movie-year'>{row.release_date if row.release_date else 'Unknown Year'}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='overview'>{row.overview[:150]}...</div>", unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
-
+                    st.markdown("</div></a>", unsafe_allow_html=True)

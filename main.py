@@ -19,7 +19,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background: url('https://res.cloudinary.com/dkx0ai3f6/image/upload/v1757430418/movie_wnonkj.jpg') no-repeat center center fixed;
+        background: url('https://res.cloudinary.com/dkx0ai3f6/image/upload/v1757431613/mo_gm9i2r.jpg') no-repeat center center fixed;
         background-size: cover;
     }
     .overlay {
@@ -118,4 +118,5 @@ if df is not None:
                 )
 else:
     st.warning("No movies found. Try changing the language or API key.")
+
 

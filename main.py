@@ -134,4 +134,3 @@ if df is not None:
                 )
 else:
     st.warning("No movies found. Try changing the language or API key.")
-

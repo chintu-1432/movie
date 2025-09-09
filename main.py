@@ -7,7 +7,7 @@ from sklearn.metrics.pairwise import linear_kernel
 # ============================
 # CONFIG
 # ============================
-API_KEY = "YOUR_TMDB_API_KEY"
+API_KEY = "16bc7af36c595883827324446a8c4365"
 BASE_URL = "https://api.themoviedb.org/3"
 
 st.set_page_config(page_title="🎬 Movie Recommender", layout="wide")
@@ -134,3 +134,4 @@ if df is not None:
                 )
 else:
     st.warning("No movies found. Try changing the language or API key.")
+

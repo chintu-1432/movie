@@ -28,7 +28,7 @@ st.markdown(
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.7);
+        background: rgba(0,0,0,0.45);
         z-index: -1;
     }
     .movie-card {
@@ -118,5 +118,6 @@ if df is not None:
                 )
 else:
     st.warning("No movies found. Try changing the language or API key.")
+
 
 

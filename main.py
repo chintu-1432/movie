@@ -1,154 +1,136 @@
 import streamlit as st
-import requests
 import pandas as pd
+import requests
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import linear_kernel
 
 # ============================
 # CONFIG
 # ============================
-API_KEY = "16bc7af36c595883827324446a8c4365"  # Replace with your TMDB API key
+API_KEY = "YOUR_TMDB_API_KEY"
 BASE_URL = "https://api.themoviedb.org/3"
 
+st.set_page_config(page_title="🎬 Movie Recommender", layout="wide")
+
 # ============================
-# FETCH MOVIES FROM TMDB
+# CUSTOM CSS with Background Image
 # ============================
-def fetch_movies(language_code="en"):
-    url = f"{BASE_URL}/discover/movie?api_key={API_KEY}&with_original_language={language_code}&sort_by=popularity.desc&page=1"
+st.markdown(
+    """
+    <style>
+    body {
+        background: url('https://res.cloudinary.com/dkx0ai3f6/image/upload/v1757430418/movie_wnonkj.jpg') no-repeat center center fixed;
+        background-size: cover;
+    }
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: -1;
+    }
+    .movie-card {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 15px;
+        padding: 15px;
+        margin: 10px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+    .movie-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255,255,255,0.6);
+    }
+    .movie-poster {
+        border-radius: 10px;
+        box-shadow: 0px 0px 12px rgba(0,0,0,0.6);
+    }
+    .stButton>button {
+        background: linear-gradient(45deg, #ff0066, #ffcc00);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: 0.4s;
+    }
+    .stButton>button:hover {
+        transform: scale(1.1);
+        background: linear-gradient(45deg, #ffcc00, #ff0066);
+    }
+    </style>
+    <div class="overlay"></div>
+    """,
+    unsafe_allow_html=True
+)
+
+# ============================
+# FETCH MOVIES
+# ============================
+def fetch_movies(language="en"):
+    url = f"{BASE_URL}/discover/movie?api_key={API_KEY}&with_original_language={language}&sort_by=popularity.desc&page=1"
     response = requests.get(url)
-    data = response.json()
-    if "results" in data:
-        return pd.DataFrame(data["results"])
-    return pd.DataFrame()
+    if response.status_code == 200:
+        return response.json().get("results", [])
+    return []
 
 # ============================
-# BUILD CONTENT-BASED RECOMMENDER
+# RECOMMENDER
 # ============================
-def build_recommendations(df, movie_title, top_n=6):
-    if df.empty or "title" not in df:
-        return []
+def build_similarity_matrix(movies):
+    df = pd.DataFrame(movies)
+    if df.empty or "overview" not in df:
+        return None, None
+    tfidf = TfidfVectorizer(stop_words="english")
+    tfidf_matrix = tfidf.fit_transform(df["overview"].fillna(""))
+    cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+    return cosine_sim, df
 
-    # Fill missing genres/overview
-    df["overview"] = df["overview"].fillna("")
-
-    # Combine genres + overview for better recommendations
-    df["features"] = df["overview"] + " " + df["genre_ids"].astype(str)
-
-    # Convert text to vectors
-    vectorizer = TfidfVectorizer(stop_words="english")
-    tfidf_matrix = vectorizer.fit_transform(df["features"])
-
-    # Compute similarity
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-
-    # Build title-to-index map
-    indices = pd.Series(df.index, index=df["title"].str.lower())
-
-    movie_title = movie_title.lower()
-    if movie_title not in indices:
-        return []
-
-    idx = indices[movie_title]
+def recommend(movie_title, cosine_sim, df):
+    idx = df[df['title'] == movie_title].index[0]
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1:top_n+1]
+    sim_scores = sim_scores[1:6]
     movie_indices = [i[0] for i in sim_scores]
-
     return df.iloc[movie_indices]
 
 # ============================
-# STREAMLIT APP
+# UI
 # ============================
-st.set_page_config(page_title="Movie Recommender", layout="wide")
+st.title("🎥 Movie Recommendation System")
+st.markdown("Find movies you'll love in Telugu, Hindi, or English!")
 
-# Custom CSS for frontend styling + animations
-st.markdown("""
-    <style>
-        .movie-card {
-            background-color: #1e1e1e;
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            margin-bottom: 20px;
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeIn 1s ease;
-        }
-        .movie-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 18px rgba(255,75,75,0.6);
-        }
-        .movie-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .movie-year {
-            font-size: 14px;
-            color: #ccc;
-        }
-        .overview {
-            font-size: 13px;
-            margin-top: 10px;
-            color: #ddd;
-        }
-        .stButton>button {
-            background: linear-gradient(90deg, #FF4B4B, #FF8C00);
-            color: white;
-            border-radius: 8px;
-            padding: 8px 16px;
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-        .stButton>button:hover {
-            background: linear-gradient(90deg, #FF8C00, #FF4B4B);
-            transform: scale(1.05);
-        }
-        @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(15px);}
-            to {opacity: 1; transform: translateY(0);}
-        }
-    </style>
-""", unsafe_allow_html=True)
+language = st.sidebar.selectbox("🌐 Select Language", ["Telugu", "Hindi", "English"])
+language_map = {"Telugu": "te", "Hindi": "hi", "English": "en"}
 
-# Header
-st.markdown("""
-    <h1 style='text-align: center; color: #FF4B4B;'>🎬 Movie Recommendation System 🎥</h1>
-    <p style='text-align: center; color: #888;'>Find similar movies in English, Hindi, and Telugu</p>
-""", unsafe_allow_html=True)
+movies = fetch_movies(language_map[language])
+cosine_sim, df = build_similarity_matrix(movies)
 
-st.sidebar.header("🔎 Search & Recommend")
+if df is not None:
+    movie_choice = st.selectbox("🎬 Choose a movie to get recommendations", df['title'].values)
 
-# Language Selector
-language_map = {"English": "en", "Hindi": "hi", "Telugu": "te"}
-selected_language = st.sidebar.selectbox("Choose Language", list(language_map.keys()))
+    if st.button("Recommend 🎯"):
+        recommendations = recommend(movie_choice, cosine_sim, df)
+        st.subheader("✨ Recommended Movies")
 
-# Fetch Movies
-df_movies = fetch_movies(language_map[selected_language])
-
-if df_movies.empty:
-    st.error("⚠️ Could not fetch movies. Check your TMDB API key.")
+        cols = st.columns(3)
+        for i, row in recommendations.iterrows():
+            with cols[i % 3]:
+                movie_url = f"https://www.themoviedb.org/movie/{row['id']}"
+                st.markdown(
+                    f"""
+                    <a href="{movie_url}" target="_blank" style="text-decoration:none; color:white;">
+                        <div class="movie-card">
+                            <img src="https://image.tmdb.org/t/p/w200{row['poster_path']}" class="movie-poster" width="200">
+                            <h4>{row['title']} ({row.get('release_date', 'N/A')[:4]})</h4>
+                            <p>{row['overview'][:120]}...</p>
+                        </div>
+                    </a>
+                    """,
+                    unsafe_allow_html=True
+                )
 else:
-    movie_list = df_movies["title"].tolist()
-    selected_movie = st.sidebar.selectbox("🎞️ Choose a movie", movie_list)
-
-    if st.sidebar.button("✨ Get Recommendations"):
-        recommendations = build_recommendations(df_movies, selected_movie)
-        if len(recommendations) == 0:
-            st.warning("No recommendations found.")
-        else:
-            st.subheader(f"Movies similar to **{selected_movie}** ({selected_language}):")
-            cols = st.columns(3)
-            for i, row in enumerate(recommendations.itertuples(), 1):
-                with cols[(i-1) % 3]:
-                    movie_url = f"https://www.themoviedb.org/movie/{row.id}"
-                    poster_url = f"https://image.tmdb.org/t/p/w300{row.poster_path}" if row.poster_path else ""
-                    st.markdown(f"<a href='{movie_url}' target='_blank'>", unsafe_allow_html=True)
-                    st.markdown("<div class='movie-card'>", unsafe_allow_html=True)
-                    if poster_url:
-                        st.image(poster_url, width=180, caption="")
-                    st.markdown(f"<div class='movie-title'>{row.title}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='movie-year'>{row.release_date if row.release_date else 'Unknown Year'}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='overview'>{row.overview[:150]}...</div>", unsafe_allow_html=True)
-                    st.markdown("</div></a>", unsafe_allow_html=True)
+    st.warning("No movies found. Try changing the language or API key.")

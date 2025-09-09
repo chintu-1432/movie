@@ -18,7 +18,7 @@ st.set_page_config(page_title="🎬 Movie Recommender", layout="wide")
 st.markdown(
     """
     <style>
-    body {
+    .stApp {
         background: url('https://res.cloudinary.com/dkx0ai3f6/image/upload/v1757430418/movie_wnonkj.jpg') no-repeat center center fixed;
         background-size: cover;
     }
@@ -44,28 +44,12 @@ st.markdown(
         transform: scale(1.05);
         box-shadow: 0 0 20px rgba(255,255,255,0.6);
     }
-    .movie-poster {
-        border-radius: 10px;
-        box-shadow: 0px 0px 12px rgba(0,0,0,0.6);
-    }
-    .stButton>button {
-        background: linear-gradient(45deg, #ff0066, #ffcc00);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-weight: bold;
-        transition: 0.4s;
-    }
-    .stButton>button:hover {
-        transform: scale(1.1);
-        background: linear-gradient(45deg, #ffcc00, #ff0066);
-    }
     </style>
     <div class="overlay"></div>
     """,
     unsafe_allow_html=True
 )
+
 
 # ============================
 # FETCH MOVIES
@@ -134,3 +118,4 @@ if df is not None:
                 )
 else:
     st.warning("No movies found. Try changing the language or API key.")
+
